@@ -1,0 +1,32 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+
+# Build output
+dist/
+build/
+
+# Environment variables
+.env
+.env.*
+
+# TypeScript
+*.tsbuildinfo
+
+# Mac system files
+.DS_Store
+
+# VS Code settings
+.vscode/
+
+# Test coverage
+tests/
