@@ -398,12 +398,21 @@ Base URL: `/api/v1`
 
 ---
 
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-(You might want to create a `LICENSE` file in your root directory with the standard MIT License text if you don't have one.)
-
 ## Project URLs
 *   **GitHub Repository:** [Your GitHub URL]
 - https://roadmap.sh/projects/movie-reservation-system
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create feature branch
+3. Write tests
+4. Submit a PR
+
+Please adhere to the existing code style and coverage requirements.
+
+---
+
+© 2025 Ahmed Hesham. MIT License.
