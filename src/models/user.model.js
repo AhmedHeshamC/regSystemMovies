@@ -52,7 +52,7 @@ module.exports = (sequelize, DataTypes) => {
   User.associate = (models) => {
     // Change from belongsToMany to belongsTo
     User.belongsTo(models.Role, {
-      foreignKey: 'roleId', // Assumes the foreign key column in 'users' is named 'roleId'
+      foreignKey: 'role_id', // Assumes the foreign key column in 'users' is named 'role_id'
       as: 'role' // Optional alias
     });
   };

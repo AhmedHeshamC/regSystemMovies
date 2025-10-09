@@ -135,13 +135,14 @@ const createReservation = async (userId, showtimeId, seatIds) => {
 const getReservationById = async (reservationId, requestingUserId, requestingUserRole) => {
   const reservation = await Reservation.findByPk(reservationId, {
     include: [
-      { model: ReservedSeat, include: [Seat] },
+      { model: ReservedSeat, attributes: ['id'], include: [{ model: Seat, attributes: ['row', 'number'] }] },
       { model: User, attributes: ['id', 'username'] },
       {
         model: Showtime,
+        attributes: ['id', 'startTime', 'endTime'],
         include: [
-          { model: Movie, as: 'movie' }, // Add alias
-          { model: Theater, as: 'theater' } // Add alias
+          { model: Movie, as: 'movie', attributes: ['id', 'title'] },
+          { model: Theater, as: 'theater', attributes: ['id', 'name'] }
         ]
       }
     ]
@@ -189,9 +190,21 @@ const cancelReservation = async (reservationId, requestingUserId, requestingUser
   reservation.status = 'cancelled';
   await reservation.save();
 
-  // Optionally, re-fetch with associations to return full details
-  // Ensure role is passed correctly if getReservationById relies on it for auth check on re-fetch
-  return getReservationById(reservationId, requestingUserId, requestingUserRole);
+  // Re-fetch the reservation with the same optimized includes as getReservationById
+  return Reservation.findByPk(reservationId, {
+    include: [
+      { model: ReservedSeat, attributes: ['id'], include: [{ model: Seat, attributes: ['row', 'number'] }] },
+      { model: User, attributes: ['id', 'username'] },
+      {
+        model: Showtime,
+        attributes: ['id', 'startTime', 'endTime'],
+        include: [
+          { model: Movie, as: 'movie', attributes: ['id', 'title'] },
+          { model: Theater, as: 'theater', attributes: ['id', 'name'] }
+        ]
+      }
+    ]
+  });
 };
 
 
@@ -223,13 +236,14 @@ const getAllReservations = async () => {
   // Fetch all reservations with the same includes as getReservationById for consistency
   const reservations = await Reservation.findAll({
     include: [
-      { model: ReservedSeat, include: [Seat] },
+      { model: ReservedSeat, attributes: ['id'], include: [{ model: Seat, attributes: ['row', 'number'] }] },
       { model: User, attributes: ['id', 'username'] },
       {
         model: Showtime,
+        attributes: ['id', 'startTime', 'endTime'],
         include: [
-          { model: Movie, as: 'movie' },
-          { model: Theater, as: 'theater' }
+          { model: Movie, as: 'movie', attributes: ['id', 'title'] },
+          { model: Theater, as: 'theater', attributes: ['id', 'name'] }
         ]
       }
     ],

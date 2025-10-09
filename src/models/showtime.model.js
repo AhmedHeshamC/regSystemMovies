@@ -46,11 +46,14 @@ module.exports = (sequelize) => {
     indexes: [
         // Index for querying showtimes by theater and time
         {
-            fields: ['theaterId', 'startTime', 'endTime'],
+            fields: ['theater_id', 'start_time', 'end_time'],
         },
         // Index for querying showtimes by movie
         {
-            fields: ['movieId'],
+            fields: ['movie_id'],
+        },
+        {
+            fields: ['start_time'],
         }
     ]
   });

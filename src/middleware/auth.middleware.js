@@ -1,7 +1,8 @@
 // src/middleware/auth.middleware.js
 const { verifyToken } = require('../utils/jwt.utils');
 const createError = require('http-errors');
-const { User, Role } = require('../models'); // Now correctly requires from index.js
+const { User, Role } = require('../models');
+const { isBlacklisted } = require('../utils/tokenBlacklist.utils');
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -9,6 +10,10 @@ const authenticateToken = (req, res, next) => {
 
   if (token == null) {
     return next(createError(401, 'Authentication required: No token provided')); // Unauthorized if no token
+  }
+
+  if (isBlacklisted(token)) {
+    return next(createError(403, 'Forbidden: Token has been revoked'));
   }
 
   const userPayload = verifyToken(token);
@@ -51,6 +56,7 @@ const isAdmin = async (req, res, next) => {
             include: [{ model: Role, as: 'role' }]
         });
         if (!user || !user.role || user.role.name !== 'admin') {
+            console.warn(`Unauthorized access attempt: User ${req.user.username} (ID: ${req.user.id}) tried to access admin route.`);
             return next(createError(403, 'Forbidden: Admins only')); // 403 Forbidden
         }
         // Optionally attach the full user object with role to req if needed downstream
@@ -78,7 +84,8 @@ const isUser = async (req, res, next) => {
         });
         // Allow if user exists and has the 'user' role (or potentially 'admin' as admins can often do user actions)
         // Adjust the condition based on specific requirements (e.g., if admins should also pass this check)
-        if (!user || !user.role || (user.role.name !== 'user' && user.role.name !== 'admin')) { 
+        if (!user || !user.role || user.role.name !== 'user') {
+            console.warn(`Unauthorized access attempt: User ${req.user.username} (ID: ${req.user.id}) tried to access user-only route without appropriate role.`);
             return next(createError(403, 'Forbidden: User role required')); // 403 Forbidden
         }
         next(); // User has the required role, proceed

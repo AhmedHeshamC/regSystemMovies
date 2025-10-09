@@ -1,12 +1,13 @@
-// src/controllers/genre.controller.js
 const genreService = require('../services/genre.service');
 const createError = require('http-errors');
+const cache = require('../utils/cache.utils');
 
 // Controller to handle genre creation
 const createGenre = async (req, res, next) => {
   try {
     const { name } = req.body;
     const genre = await genreService.createGenre(name);
+    cache.del('all-genres'); // Invalidate cache
     res.status(201).json(genre);
   } catch (error) {
     next(error); // Pass errors to the error handler
@@ -16,7 +17,13 @@ const createGenre = async (req, res, next) => {
 // Controller to handle fetching all genres
 const getAllGenres = async (req, res, next) => {
   try {
+    const cacheKey = 'all-genres';
+    const cachedGenres = cache.get(cacheKey);
+    if (cachedGenres) {
+      return res.status(200).json(cachedGenres);
+    }
     const genres = await genreService.getAllGenres();
+    cache.set(cacheKey, genres);
     res.status(200).json(genres);
   } catch (error) {
     next(error);
@@ -30,7 +37,13 @@ const getGenreById = async (req, res, next) => {
         if (isNaN(genreId)) {
             throw createError(400, 'Invalid genre ID.');
         }
+        const cacheKey = `genre-${genreId}`;
+        const cachedGenre = cache.get(cacheKey);
+        if (cachedGenre) {
+          return res.status(200).json(cachedGenre);
+        }
         const genre = await genreService.getGenreById(genreId);
+        cache.set(cacheKey, genre);
         res.status(200).json(genre);
     } catch (error) {
         next(error);
@@ -46,6 +59,8 @@ const updateGenre = async (req, res, next) => {
     }
     const { name } = req.body;
     const updatedGenre = await genreService.updateGenre(genreId, name);
+    cache.del('all-genres'); // Invalidate cache
+    cache.del(`genre-${genreId}`); // Invalidate specific genre cache
     res.status(200).json(updatedGenre);
   } catch (error) {
     next(error);
@@ -60,6 +75,8 @@ const deleteGenre = async (req, res, next) => {
         throw createError(400, 'Invalid genre ID.');
     }
     await genreService.deleteGenre(genreId);
+    cache.del('all-genres'); // Invalidate cache
+    cache.del(`genre-${genreId}`); // Invalidate specific genre cache
     res.status(204).send(); // No Content
   } catch (error) {
     next(error);

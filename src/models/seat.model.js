@@ -37,7 +37,7 @@ module.exports = (sequelize) => {
       // Unique constraint for seat within a theater
       {
         unique: true,
-        fields: ['theaterId', 'row', 'number'],
+        fields: ['theater_id', 'row', 'number'],
       },
     ],
   });

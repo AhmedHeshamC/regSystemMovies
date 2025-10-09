@@ -25,7 +25,7 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true, // Or false depending on requirements
         references: {
-            model: 'Genres', // 'Genres' is the table name Sequelize generates
+            model: 'genres', // 'genres' is the table name
             key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -34,7 +34,12 @@ module.exports = (sequelize) => {
   }, {
     // Model options
     timestamps: true, // Adds createdAt and updatedAt fields
-    tableName: 'Movies' // Explicitly define table name if needed
+    tableName: 'movies', // Explicitly define table name if needed
+    indexes: [
+      {
+        fields: ['release_year'],
+      },
+    ],
   });
 
   Movie.associate = (models) => {

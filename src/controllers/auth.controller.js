@@ -1,4 +1,5 @@
 const authService = require('../services/auth.service');
+const { addToBlacklist } = require('../utils/tokenBlacklist.utils');
 
 class AuthController {
   async signup(req, res, next) {
@@ -27,11 +28,13 @@ class AuthController {
   }
 
   async logout(req, res, next) {
-    // For stateless JWT, logout is primarily client-side (discarding the token).
-    // If using a token blocklist, implement invalidation logic here.
-    // For now, just send a success message.
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token) {
+      addToBlacklist(token);
+      console.log(`Token blacklisted for user: ${req.user ? req.user.username : 'unknown'}`);
+    }
     res.status(200).json({ message: 'Logged out successfully' });
-    // Note: Actual token invalidation would require more setup (e.g., Redis blocklist).
   }
 
   async createAdmin(req, res, next) {

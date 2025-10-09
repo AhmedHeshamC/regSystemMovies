@@ -22,14 +22,10 @@ module.exports = (sequelize, DataTypes) => { // Export a function
     timestamps: false, // Keep timestamps false if not needed
   });
 
-  // Define associations within an associate method
   Role.associate = (models) => {
-    Role.belongsToMany(models.User, {
-      through: 'user_roles', // Name of the join table
-      foreignKey: 'roleId',   // Foreign key in the join table referencing Role
-      otherKey: 'userId'     // Foreign key in the join table referencing User
+    Role.hasMany(models.User, {
+      foreignKey: 'role_id',
     });
-    // Add other associations here if needed
   };
 
   return Role; // Return the defined model

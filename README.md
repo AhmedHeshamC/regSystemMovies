@@ -9,6 +9,8 @@ This is the backend API for a Movie Reservation System, allowing users to browse
 *   [Prerequisites](#prerequisites)
 *   [Installation](#installation)
 *   [Running the Application](#running-the-application)
+*   [Testing](#testing)
+*   [Security Features](#security-features)
 *   [Testing with Postman](#testing-with-postman)
 *   [API Endpoints](#api-endpoints)
     *   [Authentication (`/api/v1/auth`)](#authentication-apiv1auth)
@@ -40,7 +42,7 @@ This project provides a RESTful API built with Node.js and Express. It uses Sequ
 *   **Authentication:** JWT (JSON Web Tokens) using `jsonwebtoken`
 *   **Password Hashing:** `bcrypt`
 *   **Validation:** `express-validator`
-*   **Security Middleware:** Helmet
+*   **Security Middleware:** Helmet, express-rate-limit
 *   **Environment Variables:** `dotenv`
 
 ## Prerequisites
@@ -63,7 +65,7 @@ This project provides a RESTful API built with Node.js and Express. It uses Sequ
 
 3.  **Configure Environment Variables:**
     *   Create a `.env` file in the project root.
-    *   Copy the contents of `.env.example` (if provided) or add the following variables, replacing the placeholder values with your actual database credentials:
+    *   Copy the contents of `.env.example` (if provided) or add the following variables, replacing the placeholder values with your actual database credentials and generating a strong JWT secret:
         ```dotenv:.env
         NODE_ENV=development
         PORT=3000
@@ -77,14 +79,17 @@ This project provides a RESTful API built with Node.js and Express. It uses Sequ
         DB_DIALECT=mysql
 
         # JWT Configuration
-        JWT_SECRET=your_very_strong_jwt_secret # CHANGE THIS!
+        JWT_SECRET=your_very_strong_jwt_secret_here # IMPORTANT: Generate a long, random string!
         JWT_EXPIRES_IN=1h
 
         # Default Admin User (for seeding)
         ADMIN_USERNAME=admin
         ADMIN_PASSWORD=password123 # CHANGE THIS for security!
         ```
-    *   **Important:** Ensure the database specified in `DB_DATABASE` exists on your MySQL server.
+    *   **Important:**
+        *   Ensure the database specified in `DB_DATABASE` exists on your MySQL server.
+        *   The `JWT_SECRET` is critical for security. **Never use a weak or default secret in production.** Generate a strong, random string (e.g., using `openssl rand -base64 32`) and keep it secure.
+        *   Never commit your `.env` file to version control in production environments. Use secure methods for managing secrets (e.g., Kubernetes Secrets, AWS Secrets Manager, Azure Key Vault).
 
 4.  **Database Seeding:**
     *   This command syncs the database schema based on your Sequelize models and populates it with initial data (roles and the default admin user defined in your `.env` or seed files).
@@ -104,6 +109,38 @@ This project provides a RESTful API built with Node.js and Express. It uses Sequ
     ```
 
 The API will typically be available at `http://localhost:3000` (or the port specified in your `.env` file).
+
+## Testing
+
+The project uses Mocha and Chai for testing, with `supertest` for API integration tests.
+
+*   **Run all tests:**
+    ```bash
+    npm test
+    ```
+
+## Security Features
+
+This API incorporates several security measures to protect data and prevent common vulnerabilities:
+
+*   **JWT Authentication:**
+    *   Uses JSON Web Tokens for stateless user authentication.
+    *   Tokens are configured with an expiration time (`JWT_EXPIRES_IN`) to limit the window of opportunity for compromised tokens.
+    *   Robust handling for missing, invalid, or expired tokens.
+*   **Role-Based Access Control (RBAC):**
+    *   Middleware (`isAdmin`, `isUser`) checks the authenticated user's role against the database to ensure only authorized users can access specific routes and resources.
+*   **Password Hashing:**
+    *   User passwords are securely hashed using `bcrypt` (with a salt factor of 10) before being stored in the database. This protects against plaintext password exposure.
+*   **Input Validation:**
+    *   Utilizes `express-validator` to validate incoming request data (body, parameters, queries). This helps prevent common attacks like SQL injection, XSS, and ensures data integrity.
+*   **Security Headers (Helmet):**
+    *   The `helmet` middleware is used to set various HTTP headers that enhance API security, including protection against XSS, MIME-type sniffing, clickjacking, and enforcing HSTS.
+*   **Rate Limiting:**
+    *   `express-rate-limit` is implemented to protect against brute-force attacks and Denial-of-Service (DoS) by limiting the number of requests a user can make within a specified time window.
+*   **Token Blacklisting:**
+    *   An in-memory token blacklisting mechanism is in place to immediately invalidate JWTs upon user logout, preventing their reuse even if they haven't expired.
+*   **Security Logging:**
+    *   Key security events, such as failed login attempts, unauthorized access attempts (admin and user roles), and token blacklisting, are logged to aid in monitoring and incident response.
 
 ## Testing with Postman
 
@@ -154,7 +191,7 @@ Base URL: `/api/v1`
     *   **Description:** Registers a new user with the 'user' role.
     *   **Auth:** None.
     *   **Body:** `username`, `password`.
-    *   **Validation:** See validation rules in the codebase.
+    *   **Validation:** See validation rules in the codebase (`src/validation.utils.js`).
     *   **Response (201):** New user object (excluding password).
     *   **Response (400):** Validation errors.
     *   **Response (409):** Username already exists.
@@ -163,16 +200,17 @@ Base URL: `/api/v1`
     *   **Description:** Authenticates a user and returns a JWT.
     *   **Auth:** None.
     *   **Body:** `username`, `password`.
-    *   **Validation:** See validation rules in the codebase.
+    *   **Validation:** See validation rules in the codebase (`src/validation.utils.js`).
     *   **Response (200):** `{ "token": "JWT_TOKEN" }`.
     *   **Response (400):** Validation errors.
     *   **Response (401):** Invalid credentials.
 
 *   **`POST /logout`**
-    *   **Description:** Placeholder for client-side token removal. API confirms receipt.
+    *   **Description:** Invalidates the current JWT by adding it to a blacklist, effectively logging the user out.
     *   **Auth:** Requires valid JWT (`Bearer <TOKEN>`).
     *   **Response (200):** `{ "message": "Logged out successfully" }`.
     *   **Response (401):** Missing/invalid token.
+    *   **Response (403):** Token has been revoked.
 
 *   **`POST /admin/create`**
     *   **Description:** Creates a new user with the 'admin' role.
@@ -212,7 +250,7 @@ Base URL: `/api/v1`
     *   **Description:** Creates a new genre.
     *   **Auth:** Requires Admin JWT (`Bearer <ADMIN_TOKEN>`).
     *   **Body:** `name`.
-    *   **Validation:** See validation rules in the codebase.
+    *   **Validation:** See validation rules in the codebase (`src/validation.utils.js`).
     *   **Response (201):** The newly created genre object.
     *   **Response (400):** Validation errors.
     *   **Response (401/403):** Authentication/Authorization error.
@@ -228,7 +266,7 @@ Base URL: `/api/v1`
     *   **Auth:** Requires Admin JWT (`Bearer <ADMIN_TOKEN>`).
     *   **URL Parameter:** `genreId` - ID of the genre to update.
     *   **Body:** `name`.
-    *   **Validation:** See validation rules in the codebase.
+    *   **Validation:** See validation rules in the codebase (`src/validation.utils.js`).
     *   **Response (200):** The updated genre object.
     *   **Response (400):** Validation errors / Invalid `genreId`.
     *   **Response (401/403):** Authentication/Authorization error.

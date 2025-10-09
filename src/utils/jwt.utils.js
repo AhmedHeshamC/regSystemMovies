@@ -1,7 +1,10 @@
 const jwt = require('jsonwebtoken');
 
 // Ensure JWT_SECRET and JWT_EXPIRES_IN are set in your environment variables (.env)
-const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret_key'; // Use environment variable
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL ERROR: JWT_SECRET is not defined. Please set this environment variable.');
+}
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h'; // Use environment variable
 
 /**

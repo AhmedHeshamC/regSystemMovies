@@ -1,6 +1,8 @@
 const express = require('express');
 const helmet = require('helmet'); // For security headers
 const cors = require('cors'); // If your frontend is on a different origin
+const compression = require('compression'); // For response compression
+const rateLimit = require('express-rate-limit'); // For rate limiting
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes'); // Import user routes
 const genreRoutes = require('./routes/genre.routes'); // Import genre routes
@@ -22,8 +24,19 @@ const app = express();
 // --- Middleware ---
 app.use(helmet()); // Set various security HTTP headers
 app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use(compression()); // Compress all responses
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
+
+// Rate limiting to prevent abuse
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Limit each IP to 1000 requests per windowMs
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+app.use('/api', apiLimiter); // Apply to all API routes
 
 // --- Routes ---
 app.get('/', (req, res) => { // Basic health check route
@@ -54,7 +67,7 @@ app.use((req, res, next) => {
 // app.use(errorHandler); // Assuming you create this middleware
 app.use((err, req, res, next) => {
     console.error(err); // Log the error
-    const status = err.status || 500;
+    const status = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
     res.status(status).json({
         error: {

@@ -11,7 +11,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Reservations', // 'Reservations' refers to table name
+        model: 'reservations', // 'reservations' refers to table name
         key: 'id',
       },
     },
@@ -19,7 +19,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Seats', // 'Seats' refers to table name
+        model: 'seats', // 'seats' refers to table name
         key: 'id',
       },
     },

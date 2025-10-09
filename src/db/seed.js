@@ -1,8 +1,6 @@
 require('dotenv').config({ path: '../../.env' }); // Load .env from root relative to this file's location
 const { sequelize } = require('../config/database');
-const Role = require('../models/role.model');
-const User = require('../models/user.model');
-const Genre = require('../models/genre.model'); // Assuming genre model exists or will be created
+const { Role, User, Genre } = require('../models');
 const bcrypt = require('bcrypt'); // Needed for admin password, though hook handles hashing
 
 // --- Configuration ---

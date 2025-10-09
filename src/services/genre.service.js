@@ -33,6 +33,7 @@ const createGenre = async (name) => {
 const getAllGenres = async () => {
   try {
     const genres = await Genre.findAll({
+        attributes: ['id', 'name'],
         order: [['name', 'ASC']] // Optional: order alphabetically
     });
     return genres;
@@ -50,7 +51,7 @@ const getAllGenres = async () => {
  */
 const getGenreById = async (genreId) => {
     try {
-        const genre = await Genre.findByPk(genreId);
+        const genre = await Genre.findByPk(genreId, { attributes: ['id', 'name'] });
         if (!genre) {
             throw createError(404, 'Genre not found.');
         }

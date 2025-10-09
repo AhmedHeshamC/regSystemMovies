@@ -1,4 +1,5 @@
 const theaterService = require('../services/theater.service');
+const cache = require('../utils/cache.utils');
 
 // Controller to create a new theater
 exports.create = async (req, res) => {
@@ -13,6 +14,7 @@ exports.create = async (req, res) => {
         }
 
         const theater = await theaterService.createTheater({ name, location, capacity });
+        cache.del('all-theaters'); // Invalidate cache
         res.status(201).send(theater);
     } catch (error) {
         console.error("Error creating theater:", error);
@@ -26,7 +28,13 @@ exports.create = async (req, res) => {
 // Controller to get all theaters
 exports.findAll = async (req, res) => {
     try {
+        const cacheKey = 'all-theaters';
+        const cachedTheaters = cache.get(cacheKey);
+        if (cachedTheaters) {
+            return res.status(200).send(cachedTheaters);
+        }
         const theaters = await theaterService.findAllTheaters();
+        cache.set(cacheKey, theaters);
         res.status(200).send(theaters);
     } catch (error) {
         console.error("Error fetching theaters:", error);
@@ -41,8 +49,14 @@ exports.findOne = async (req, res) => {
          if (isNaN(id)) {
             return res.status(400).send({ message: 'Invalid theater ID.' });
         }
+        const cacheKey = `theater-${id}`;
+        const cachedTheater = cache.get(cacheKey);
+        if (cachedTheater) {
+            return res.status(200).send(cachedTheater);
+        }
         const theater = await theaterService.findTheaterById(id);
         if (theater) {
+            cache.set(cacheKey, theater);
             res.status(200).send(theater);
         } else {
             res.status(404).send({ message: `Theater with id=${id} not found.` });
@@ -73,6 +87,8 @@ exports.update = async (req, res) => {
 
         const updatedTheater = await theaterService.updateTheater(id, req.body);
         if (updatedTheater) { // Service returns the updated object or null if not found
+             cache.del('all-theaters'); // Invalidate cache
+             cache.del(`theater-${id}`); // Invalidate specific theater cache
              res.status(200).send(updatedTheater);
         } else {
              // If service returns null, it means the theater wasn't found initially
@@ -97,8 +113,9 @@ exports.delete = async (req, res) => {
 
         const success = await theaterService.deleteTheater(id);
         if (success) {
-            res.status(200).send({ message: 'Theater deleted successfully.' });
-            // Alternative: res.status(204).send(); // No Content
+            cache.del('all-theaters'); // Invalidate cache
+            cache.del(`theater-${id}`); // Invalidate specific theater cache
+            res.status(204).send(); // No Content
         } else {
             res.status(404).send({ message: `Theater with id=${id} not found.` });
         }

@@ -123,7 +123,7 @@ const findAllShowtimes = async (filters = {}) => {
     return Showtime.findAll({
         where: whereClause,
         include: [
-            { model: Movie, as: 'movie', attributes: ['id', 'title', 'poster_image_url'] }, // Select specific attributes
+            { model: Movie, as: 'movie', attributes: ['id', 'title'] }, // Select specific attributes
             { model: Theater, as: 'theater', attributes: ['id', 'name', 'location'] } // Select specific attributes
         ],
         order: [['startTime', 'ASC']] // Order by start time

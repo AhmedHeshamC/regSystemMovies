@@ -106,8 +106,7 @@ exports.delete = async (req, res) => {
 
         const success = await showtimeService.deleteShowtime(id);
         if (success) {
-            res.status(200).send({ message: 'Showtime deleted successfully.' });
-            // Alternative: res.status(204).send(); // No Content
+            res.status(204).send();
         } else {
             res.status(404).send({ message: `Showtime with id=${id} not found.` });
         }

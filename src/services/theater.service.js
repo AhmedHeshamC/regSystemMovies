@@ -23,6 +23,7 @@ const createTheater = async (theaterData) => {
  */
 const findAllTheaters = async () => {
     return Theater.findAll({
+        attributes: ['id', 'name', 'location', 'capacity'],
         order: [['name', 'ASC']] // Order alphabetically by name
     });
 };
@@ -35,7 +36,7 @@ const findAllTheaters = async () => {
  * @returns {Promise<Theater|null>} - The theater instance or null if not found.
  */
 const findTheaterById = async (id, includeShowtimes = false) => {
-    const options = {};
+    const options = { attributes: ['id', 'name', 'location', 'capacity'] };
     if (includeShowtimes) {
         options.include = [{ model: Showtime, as: 'showtimes' }];
     }

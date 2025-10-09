@@ -19,7 +19,7 @@ const sequelize = new Sequelize(
     port: process.env.DB_PORT || 3306, // Default MySQL port
     logging: process.env.NODE_ENV === 'development' ? console.log : false, // Log SQL queries in development
     pool: { // Optional: Configure connection pooling
-      max: 5,
+      max: 20,
       min: 0,
       acquire: 30000,
       idle: 10000

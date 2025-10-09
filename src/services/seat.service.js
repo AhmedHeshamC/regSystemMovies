@@ -13,6 +13,7 @@ const getSeatsByTheater = async (theaterId) => {
   }
   const seats = await Seat.findAll({
     where: { theaterId },
+    attributes: ['id', 'row', 'number', 'type'],
     order: [['row', 'ASC'], ['number', 'ASC']], // Order seats logically
   });
   return seats;
@@ -24,7 +25,7 @@ const getSeatsByTheater = async (theaterId) => {
  * @returns {Promise<Seat>} - A promise that resolves to the seat object.
  */
 const getSeatById = async (seatId) => {
-    const seat = await Seat.findByPk(seatId);
+    const seat = await Seat.findByPk(seatId, { attributes: ['id', 'row', 'number', 'type'] });
     if (!seat) {
       throw createError(404, 'Seat not found');
     }
